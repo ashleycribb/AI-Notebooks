@@ -14,3 +14,5 @@
 ▶ Step-by-Step Guide to Creating Synthetic Data Using the Synthetic Data Vault (SDV)  [Notebook](https://github.com/Marktechpost/AI-Notebooks/blob/main/AutoGen_TeamTool_RoundRobin_Marktechpost.ipynb) [Tutorial](https://www.marktechpost.com/2025/05/25/step-by-step-guide-to-creating-synthetic-data-using-the-synthetic-data-vault-sdv/)
 
 ▶ A Comprehensive Coding Guide to Crafting Advanced Round-Robin Multi-Agent Workflows with Microsoft AutoGen  [Notebook](https://github.com/Marktechpost/AI-Notebooks/blob/main/Synthetic_Data_Creation.ipynb) [Tutorial](https://www.marktechpost.com/2025/05/23/a-comprehensive-coding-guide-to-crafting-advanced-round-robin-multi-agent-workflows-with-microsoft-autogen/)
+
+▶ A Guide to Dissertation Committee Personas in Education Technology [Notebook](https://github.com/Marktechpost/AI-Notebooks/blob/main/dissertation_committee_personas.ipynb)
