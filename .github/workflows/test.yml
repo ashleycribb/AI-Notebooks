@@ -26,7 +26,7 @@ jobs:
     - name: Validate notebook format
       run: |
         # Check if notebooks are valid JSON and can be parsed
-        for notebook in *.ipynb; do
+        find notebooks/ -name "*.ipynb" 2>/dev/null | while read notebook; do
           echo "Validating $notebook"
           python -c "import nbformat; nbformat.read('$notebook', as_version=4)"
         done
@@ -34,7 +34,18 @@ jobs:
     - name: Check notebook execution (dry run)
       run: |
         # Convert notebooks to Python scripts to check for syntax errors
-        for notebook in *.ipynb; do
+        find notebooks/ -name "*.ipynb" 2>/dev/null | while read notebook; do
           echo "Checking syntax for $notebook"
           jupyter nbconvert --to script "$notebook" --stdout > /dev/null
         done
+    
+    - name: Run custom validation
+      run: |
+        # Install additional dependencies for validation
+        pip install -r requirements.txt || echo "No requirements.txt found"
+        
+        # Run our custom validation script
+        if [ -f "scripts/validate_notebooks.py" ]; then
+          echo "Running custom validation..."
+          python scripts/validate_notebooks.py notebooks/
+        fi
