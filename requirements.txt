@@ -41,6 +41,19 @@ duckduckgo-search>=5.0.0
 nest-asyncio>=1.5.0
 python-dotenv>=1.0.0
 
+# Web Interface Dependencies
+flask>=2.3.0
+flask-socketio>=5.3.0
+python-socketio>=5.8.0
+
+# Notebook Processing
+nbformat>=5.9.0
+nbconvert>=7.7.0
+
+# AI Assistant Dependencies
+IPython>=8.0.0
+ipython-genutils>=0.2.0
+
 # Development and Testing
 pytest>=7.0.0
 black>=23.0.0

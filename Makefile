@@ -1,12 +1,13 @@
 # Makefile for AI-Notebooks project
 
-.PHONY: help install install-dev clean test validate format lint setup-env
+.PHONY: help install install-dev clean test validate format lint setup-env setup-phase1 web-server
 
 # Default target
 help:
 	@echo "Available commands:"
 	@echo "  install      - Install dependencies"
 	@echo "  install-dev  - Install development dependencies"
+	@echo "  setup-phase1 - Set up Phase 1 features (AI Assistant + Model Playground)"
 	@echo "  clean        - Clean notebooks (remove outputs)"
 	@echo "  test         - Run tests"
 	@echo "  validate     - Validate notebooks"
@@ -14,6 +15,7 @@ help:
 	@echo "  lint         - Run linting checks"
 	@echo "  setup-env    - Set up development environment"
 	@echo "  jupyter      - Start Jupyter Lab"
+	@echo "  web-server   - Start web interface server"
 
 # Installation
 install:
@@ -52,9 +54,23 @@ lint:
 test:
 	pytest tests/ -v
 
+# Phase 1 Setup
+setup-phase1:
+	python setup_phase1.py
+	@echo "Phase 1 setup completed! Check the output above for next steps."
+
 # Development
 jupyter:
 	jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+
+# Web interface
+web-server:
+	cd web_interface && python app.py
+
+# AI Assistant helpers
+ai-demo:
+	jupyter nbconvert --to notebook --execute notebooks/ai_assistant_demo.ipynb --output ai_assistant_demo_executed.ipynb
+	@echo "AI Assistant demo executed successfully"
 
 # CI/CD helpers
 ci-test: validate

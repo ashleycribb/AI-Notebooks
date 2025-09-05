@@ -9,6 +9,7 @@ A curated collection of Jupyter notebooks implementing cutting-edge AI agents, f
 
 ## 🚀 Quick Start
 
+### Basic Setup
 ```bash
 git clone https://github.com/ashleycribb/AI-Notebooks.git
 cd AI-Notebooks
@@ -16,7 +17,50 @@ pip install -r requirements.txt
 jupyter lab
 ```
 
-📖 **[Full Setup Guide](docs/SETUP.md)** | 🔧 **[Development Guide](docs/DEVELOPMENT.md)**
+### 🤖 Phase 1: AI Assistant Setup
+```bash
+# Set up AI-powered features
+make setup-phase1
+
+# Configure your API keys in .env file
+cp .env.example .env
+# Edit .env with your OpenAI, Anthropic, and Google API keys
+
+# Try the AI Assistant demo
+jupyter lab notebooks/ai_assistant_demo.ipynb
+
+# Or start the web interface
+make web-server
+```
+
+📖 **[Full Setup Guide](docs/SETUP.md)** | 🔧 **[Development Guide](docs/DEVELOPMENT.md)** | 🎮 **[AI Assistant Demo](notebooks/ai_assistant_demo.ipynb)**
+
+## ✨ Features
+
+### 🤖 Core Notebooks
+- **AI Agent Implementations** - Practical examples of multi-agent systems
+- **Framework Tutorials** - Hands-on guides for popular AI frameworks  
+- **Data Generation Techniques** - Synthetic data creation methods
+
+### 🚀 Phase 1: AI-Powered Enhancements
+- **🎯 AI Assistant with Magic Commands** - Chat, generate, and analyze code with AI
+  - `%ai_chat` - Ask questions about your code or concepts
+  - `%ai_generate` - Generate code from natural language
+  - `%%ai_code` - Explain, optimize, debug, or document code
+- **🎮 Interactive Model Playground** - Compare different AI models side-by-side
+  - Real-time model comparison
+  - Cost tracking and usage analytics
+  - Parameter tuning with sliders
+- **🌐 Web Interface** - Modern browser-based notebook interaction
+  - Enhanced notebook viewer
+  - Interactive model playground
+  - Real-time collaboration features
+
+### 🛠️ Quality & Development
+- **Ready-to-Run** - All notebooks tested and validated
+- **Comprehensive Documentation** - Detailed setup and usage guides
+- **Automated Testing** - CI/CD pipeline ensures quality
+- **Development Tools** - Utilities for notebook management and validation
 
 ## 📚 Notebooks
 
