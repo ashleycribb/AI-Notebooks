@@ -33,6 +33,21 @@ jupyter lab notebooks/ai_assistant_demo.ipynb
 make web-server
 ```
 
+### 🎓 Academic Research Setup (For Non-Technical Researchers)
+```bash
+# Set up academic research features
+python setup_academic_research.py
+
+# Try the academic research demo
+jupyter lab notebooks/academic_research_demo.ipynb
+
+# Use research magic commands
+# %research_load your_data.csv --research_question "Your question"
+# %research_eda  # Automated analysis with SweetViz
+# %research_stats  # AI-guided statistical analysis
+# %research_report  # Generate academic report
+```
+
 📖 **[Full Setup Guide](docs/SETUP.md)** | 🔧 **[Development Guide](docs/DEVELOPMENT.md)** | 🎮 **[AI Assistant Demo](notebooks/ai_assistant_demo.ipynb)**
 
 ## ✨ Features
@@ -55,6 +70,19 @@ make web-server
   - Enhanced notebook viewer
   - Interactive model playground
   - Real-time collaboration features
+
+### 🎓 Academic Research Features (NEW!)
+- **📊 Research Magic Commands** - Specialized tools for academic researchers
+  - `%research_load` - Load data with automatic quality assessment
+  - `%research_eda` - Automated EDA with SweetViz integration
+  - `%research_clean` - AI-guided data cleaning recommendations
+  - `%research_stats` - Statistical analysis with plain English explanations
+  - `%research_report` - Generate publication-ready results sections
+- **🔬 Non-Technical Friendly** - Perfect for researchers without coding background
+  - Drag-and-drop CSV analysis
+  - AI explains statistical concepts in plain language
+  - Automated report generation in academic style
+  - Built-in research best practices
 
 ### 🛠️ Quality & Development
 - **Ready-to-Run** - All notebooks tested and validated
