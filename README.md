@@ -1,6 +1,10 @@
 # AI-Notebooks
 **Colab Notebooks for Tutorials from Marktechpost**
 
+[![Test Notebooks](https://github.com/ashleycribb/AI-Notebooks/actions/workflows/test.yml/badge.svg)](https://github.com/ashleycribb/AI-Notebooks/actions/workflows/test.yml)
+
+This repository includes automated testing and Dependabot integration for maintaining code quality and keeping dependencies up to date.
+
 ▶ A Coding Guide for Building a Self-Improving AI Agent Using Google’s Gemini API with Intelligent Adaptation Features [Notebook](https://github.com/Marktechpost/AI-Notebooks/blob/main/Self_Improving_AI_Agent_with_Gemini_Marktechpost.ipynb) [Tutorial](https://www.marktechpost.com/2025/05/29/a-coding-guide-for-building-a-self-improving-ai-agent-using-googles-gemini-api-with-intelligent-adaptation-features/)
 
 ▶ A Coding Implementation to Build an Interactive Transcript and PDF Analysis with Lyzr Chatbot Framework [Notebook](https://github.com/Marktechpost/AI-Notebooks/blob/main/Lyzr_Chatbot_Framework_Implementation_Marktechpost.ipynb) [Tutorial](https://www.marktechpost.com/2025/05/27/a-coding-implementation-to-build-an-interactive-transcript-and-pdf-analysis-with-lyzr-chatbot-framework/)
