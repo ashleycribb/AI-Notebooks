@@ -1,0 +1,71 @@
+# Core dependencies for AI-Notebooks
+# Generated from notebook analysis and enhanced with common ML/AI packages
+
+# Jupyter and notebook environment
+jupyter>=1.0.0
+jupyterlab>=4.0.0
+ipywidgets>=8.0.0
+notebook>=7.0.0
+
+# AI/ML Frameworks and APIs
+openai>=1.0.0
+anthropic>=0.25.0
+google-generativeai>=0.5.0
+
+# AutoGen and Multi-Agent Systems
+autogen-agentchat[gemini]>=0.2.0
+autogen-ext[openai]>=0.2.0
+
+# LangChain ecosystem
+langchain>=0.1.0
+langchain-anthropic>=0.1.0
+langchain-core>=0.1.0
+langgraph>=0.1.0
+
+# Data Science and Visualization
+pandas>=2.0.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+scipy>=1.10.0
+
+# Academic Research Tools
+sweetviz>=2.1.0
+plotly>=5.15.0
+
+# Synthetic Data Generation
+sdv>=1.0.0
+
+# Chatbot Frameworks
+lyzr>=0.1.0
+
+# Utility Libraries
+fpdf2>=3.0.0
+youtube-transcript-api>=0.6.0
+duckduckgo-search>=5.0.0
+nest-asyncio>=1.5.0
+python-dotenv>=1.0.0
+
+# Web Interface Dependencies
+flask>=2.3.0
+flask-socketio>=5.3.0
+python-socketio>=5.8.0
+
+# Notebook Processing
+nbformat>=5.9.0
+nbconvert>=7.7.0
+
+# AI Assistant Dependencies
+IPython>=8.0.0
+ipython-genutils>=0.2.0
+
+# Development and Testing
+pytest>=7.0.0
+black>=23.0.0
+flake8>=6.0.0
+pre-commit>=3.0.0
+
+# Optional: GPU support (uncomment if needed)
+# torch>=2.0.0
+# transformers>=4.30.0
+# accelerate>=0.20.0

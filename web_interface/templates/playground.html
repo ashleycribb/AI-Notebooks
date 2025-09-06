@@ -1,0 +1,657 @@
+{% extends "base.html" %}
+
+{% block title %}Model Playground - AI-Notebooks{% endblock %}
+
+{% block extra_css %}
+<style>
+    .model-card {
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .model-card.selected {
+        border-color: var(--secondary-color);
+        background-color: #f8f9ff;
+    }
+    
+    .model-card:hover {
+        border-color: #ddd;
+    }
+    
+    .response-card {
+        border-left: 4px solid var(--secondary-color);
+        background: #f8f9fa;
+    }
+    
+    .cost-estimate {
+        font-size: 0.9em;
+        color: #666;
+    }
+    
+    .comparison-view {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .prompt-templates {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .template-btn {
+        margin: 5px;
+        font-size: 0.9em;
+    }
+    
+    .real-time-indicator {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: white;
+        padding: 10px 15px;
+        border-radius: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+    
+    .typing-indicator {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: #f0f0f0;
+        border-radius: 10px;
+        margin: 10px 0;
+    }
+    
+    .typing-dots {
+        display: flex;
+        gap: 3px;
+    }
+    
+    .typing-dots span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #666;
+        animation: typing 1.4s infinite ease-in-out;
+    }
+    
+    .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes typing {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-play me-2"></i>Model Playground</h1>
+            <div>
+                <button class="btn btn-outline-secondary me-2" onclick="clearHistory()">
+                    <i class="fas fa-trash me-1"></i>Clear History
+                </button>
+                <button class="btn btn-outline-info me-2" onclick="exportResults()">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+                <button class="btn btn-outline-primary" onclick="showStats()">
+                    <i class="fas fa-chart-bar me-1"></i>Stats
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cost Tracker -->
+<div class="cost-tracker">
+    <h6 class="mb-2"><i class="fas fa-dollar-sign me-1"></i>Cost Tracker</h6>
+    <div id="totalCost">$0.00</div>
+    <small class="text-muted">Total spent</small>
+</div>
+
+<!-- Real-time Status -->
+<div class="real-time-indicator" id="statusIndicator" style="display: none;">
+    <div class="d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        <span id="statusText">Processing...</span>
+    </div>
+</div>
+
+<!-- Prompt Templates -->
+<div class="prompt-templates">
+    <h6><i class="fas fa-lightbulb me-2"></i>Quick Prompts</h6>
+    <div id="promptTemplates">
+        <button class="btn btn-outline-primary btn-sm template-btn" onclick="useTemplate('Explain machine learning in simple terms')">
+            ML Explanation
+        </button>
+        <button class="btn btn-outline-success btn-sm template-btn" onclick="useTemplate('Write a Python function to sort a list of dictionaries by a specific key')">
+            Code Generation
+        </button>
+        <button class="btn btn-outline-info btn-sm template-btn" onclick="useTemplate('What are the pros and cons of using neural networks vs traditional algorithms?')">
+            Comparison
+        </button>
+        <button class="btn btn-outline-warning btn-sm template-btn" onclick="useTemplate('Debug this Python code and explain the issues')">
+            Code Debug
+        </button>
+        <button class="btn btn-outline-danger btn-sm template-btn" onclick="useTemplate('Summarize the key concepts of deep learning')">
+            Summarization
+        </button>
+    </div>
+</div>
+
+<!-- Main Playground -->
+<div class="row">
+    <!-- Controls Panel -->
+    <div class="col-lg-4">
+        <div class="card playground-controls">
+            <h5><i class="fas fa-cog me-2"></i>Controls</h5>
+            
+            <!-- Model Selection -->
+            <div class="mb-3">
+                <label class="form-label">Select Models:</label>
+                <div id="modelSelection">
+                    {% if models %}
+                        {% for model in models %}
+                        <div class="model-card p-3 mb-2 rounded" data-model="{{ model }}" onclick="toggleModel('{{ model }}')">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ model.title() }}</strong>
+                                    <br><small class="text-muted">{{ model }}</small>
+                                </div>
+                                <i class="fas fa-check-circle text-success" style="display: none;"></i>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            No AI models available. Please configure your API keys.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Parameters -->
+            <div class="mb-3">
+                <label for="temperatureSlider" class="form-label">
+                    Temperature: <span id="temperatureValue">0.7</span>
+                </label>
+                <input type="range" class="form-range" id="temperatureSlider" 
+                       min="0" max="1" step="0.1" value="0.7" 
+                       oninput="updateTemperature(this.value)">
+                <small class="text-muted">Higher values = more creative</small>
+            </div>
+            
+            <div class="mb-3">
+                <label for="maxTokensSlider" class="form-label">
+                    Max Tokens: <span id="maxTokensValue">500</span>
+                </label>
+                <input type="range" class="form-range" id="maxTokensSlider" 
+                       min="50" max="2000" step="50" value="500" 
+                       oninput="updateMaxTokens(this.value)">
+                <small class="text-muted">Maximum response length</small>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" onclick="runModels()" id="runButton">
+                    <i class="fas fa-play me-2"></i>Run Selected Models
+                </button>
+                <button class="btn btn-outline-secondary" onclick="compareMode()" id="compareButton">
+                    <i class="fas fa-balance-scale me-2"></i>Compare Mode
+                </button>
+            </div>
+        </div>
+        
+        <!-- Recent Results -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-history me-2"></i>Recent Results</h6>
+            </div>
+            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                <div id="recentResults">
+                    <p class="text-muted text-center">No results yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content Area -->
+    <div class="col-lg-8">
+        <!-- Prompt Input -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <label for="promptInput" class="form-label">
+                    <i class="fas fa-edit me-2"></i>Your Prompt
+                </label>
+                <textarea class="form-control" id="promptInput" rows="4" 
+                          placeholder="Enter your prompt here... Try asking about AI concepts, requesting code generation, or comparing different approaches.">Explain the concept of machine learning in simple terms.</textarea>
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Tip: Be specific and clear in your prompts for better results.
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <span>AI is thinking...</span>
+        </div>
+        
+        <!-- Results Area -->
+        <div id="resultsArea">
+            <!-- Results will be dynamically inserted here -->
+        </div>
+        
+        <!-- Comparison View -->
+        <div id="comparisonView" class="card" style="display: none;">
+            <div class="card-header">
+                <h5><i class="fas fa-balance-scale me-2"></i>Model Comparison</h5>
+            </div>
+            <div class="card-body comparison-view">
+                <div id="comparisonContent">
+                    <!-- Comparison results will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Modal -->
+<div class="modal fade" id="statsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-chart-bar me-2"></i>Usage Statistics
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="statsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables
+    let selectedModels = [];
+    let totalCost = 0;
+    let responseHistory = [];
+    let socket = null;
+    
+    // Initialize playground
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeSocket();
+        loadInitialData();
+    });
+    
+    function initializeSocket() {
+        socket = io();
+        
+        socket.on('connect', function() {
+            console.log('Connected to server');
+        });
+        
+        socket.on('model_start', function(data) {
+            showStatus(`Running ${data.model}...`);
+            showTypingIndicator();
+        });
+        
+        socket.on('model_response', function(data) {
+            hideStatus();
+            hideTypingIndicator();
+            displayResponse(data);
+            updateRecentResults(data);
+        });
+        
+        socket.on('model_error', function(data) {
+            hideStatus();
+            hideTypingIndicator();
+            showToast(`Error with ${data.model}: ${data.error}`, 'danger');
+        });
+    }
+    
+    function loadInitialData() {
+        // Select first model by default if available
+        const firstModel = document.querySelector('.model-card');
+        if (firstModel) {
+            toggleModel(firstModel.dataset.model);
+        }
+    }
+    
+    function toggleModel(modelName) {
+        const modelCard = document.querySelector(`[data-model="${modelName}"]`);
+        const checkIcon = modelCard.querySelector('.fa-check-circle');
+        
+        if (selectedModels.includes(modelName)) {
+            // Deselect
+            selectedModels = selectedModels.filter(m => m !== modelName);
+            modelCard.classList.remove('selected');
+            checkIcon.style.display = 'none';
+        } else {
+            // Select
+            selectedModels.push(modelName);
+            modelCard.classList.add('selected');
+            checkIcon.style.display = 'block';
+        }
+        
+        updateRunButton();
+    }
+    
+    function updateRunButton() {
+        const runButton = document.getElementById('runButton');
+        if (selectedModels.length === 0) {
+            runButton.disabled = true;
+            runButton.innerHTML = '<i class="fas fa-play me-2"></i>Select Models First';
+        } else {
+            runButton.disabled = false;
+            runButton.innerHTML = `<i class="fas fa-play me-2"></i>Run ${selectedModels.length} Model${selectedModels.length > 1 ? 's' : ''}`;
+        }
+    }
+    
+    function updateTemperature(value) {
+        document.getElementById('temperatureValue').textContent = value;
+    }
+    
+    function updateMaxTokens(value) {
+        document.getElementById('maxTokensValue').textContent = value;
+    }
+    
+    function useTemplate(template) {
+        document.getElementById('promptInput').value = template;
+    }
+    
+    function runModels() {
+        const prompt = document.getElementById('promptInput').value.trim();
+        if (!prompt) {
+            showToast('Please enter a prompt', 'warning');
+            return;
+        }
+        
+        if (selectedModels.length === 0) {
+            showToast('Please select at least one model', 'warning');
+            return;
+        }
+        
+        const temperature = parseFloat(document.getElementById('temperatureSlider').value);
+        
+        // Clear previous results
+        document.getElementById('resultsArea').innerHTML = '';
+        
+        // Run each selected model
+        selectedModels.forEach(model => {
+            socket.emit('run_model', {
+                prompt: prompt,
+                model: model,
+                temperature: temperature
+            });
+        });
+    }
+    
+    function compareMode() {
+        const prompt = document.getElementById('promptInput').value.trim();
+        if (!prompt) {
+            showToast('Please enter a prompt', 'warning');
+            return;
+        }
+        
+        if (selectedModels.length < 2) {
+            showToast('Please select at least 2 models for comparison', 'warning');
+            return;
+        }
+        
+        const temperature = parseFloat(document.getElementById('temperatureSlider').value);
+        
+        fetch('/api/compare', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                prompt: prompt,
+                models: selectedModels,
+                temperature: temperature
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            displayComparison(data.results);
+        })
+        .catch(error => {
+            showToast(`Error: ${error.message}`, 'danger');
+        });
+    }
+    
+    function displayResponse(data) {
+        const resultsArea = document.getElementById('resultsArea');
+        
+        const responseCard = document.createElement('div');
+        responseCard.className = 'card response-card mb-3';
+        responseCard.innerHTML = `
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>${data.model.toUpperCase()}
+                </h6>
+                <small class="text-muted">${formatTimestamp(data.timestamp)}</small>
+            </div>
+            <div class="card-body">
+                <div class="response-content">${formatResponse(data.response)}</div>
+                <div class="mt-2 cost-estimate">
+                    <small><i class="fas fa-clock me-1"></i>Response time: ~1s | <i class="fas fa-dollar-sign me-1"></i>Est. cost: $0.001</small>
+                </div>
+            </div>
+        `;
+        
+        resultsArea.appendChild(responseCard);
+        
+        // Update cost
+        totalCost += 0.001; // Rough estimate
+        updateCostDisplay();
+        
+        // Add to history
+        responseHistory.push(data);
+    }
+    
+    function displayComparison(results) {
+        const comparisonView = document.getElementById('comparisonView');
+        const comparisonContent = document.getElementById('comparisonContent');
+        
+        let html = '<div class="row">';
+        
+        results.forEach((result, index) => {
+            const colClass = results.length === 2 ? 'col-md-6' : 'col-md-4';
+            html += `
+                <div class="${colClass} mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0">${result.model.toUpperCase()}</h6>
+                            ${result.response_time ? `<small class="text-muted">${result.response_time.toFixed(2)}s</small>` : ''}
+                        </div>
+                        <div class="card-body">
+                            ${result.error ? 
+                                `<div class="alert alert-danger">${result.error}</div>` :
+                                `<div class="response-content">${formatResponse(result.response)}</div>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        comparisonContent.innerHTML = html;
+        comparisonView.style.display = 'block';
+        
+        // Scroll to comparison
+        comparisonView.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function formatResponse(response) {
+        // Basic formatting for better readability
+        return response
+            .replace(/\n/g, '<br>')
+            .replace(/```(.*?)```/gs, '<pre class="bg-light p-2 rounded"><code>$1</code></pre>')
+            .replace(/`([^`]+)`/g, '<code class="bg-light px-1 rounded">$1</code>');
+    }
+    
+    function updateRecentResults(data) {
+        const recentResults = document.getElementById('recentResults');
+        
+        if (responseHistory.length === 0) {
+            recentResults.innerHTML = '<p class="text-muted text-center">No results yet</p>';
+            return;
+        }
+        
+        const recent = responseHistory.slice(-5).reverse();
+        let html = '';
+        
+        recent.forEach(result => {
+            html += `
+                <div class="border-bottom pb-2 mb-2">
+                    <small class="text-muted">${result.model}</small><br>
+                    <small>${result.response.substring(0, 50)}...</small>
+                </div>
+            `;
+        });
+        
+        recentResults.innerHTML = html;
+    }
+    
+    function updateCostDisplay() {
+        document.getElementById('totalCost').textContent = `$${totalCost.toFixed(4)}`;
+    }
+    
+    function showStatus(message) {
+        const indicator = document.getElementById('statusIndicator');
+        const text = document.getElementById('statusText');
+        text.textContent = message;
+        indicator.style.display = 'block';
+    }
+    
+    function hideStatus() {
+        document.getElementById('statusIndicator').style.display = 'none';
+    }
+    
+    function showTypingIndicator() {
+        document.getElementById('typingIndicator').style.display = 'flex';
+    }
+    
+    function hideTypingIndicator() {
+        document.getElementById('typingIndicator').style.display = 'none';
+    }
+    
+    function clearHistory() {
+        responseHistory = [];
+        totalCost = 0;
+        document.getElementById('resultsArea').innerHTML = '';
+        document.getElementById('comparisonView').style.display = 'none';
+        updateRecentResults();
+        updateCostDisplay();
+        showToast('History cleared', 'success');
+    }
+    
+    function exportResults() {
+        if (responseHistory.length === 0) {
+            showToast('No results to export', 'warning');
+            return;
+        }
+        
+        const data = {
+            timestamp: new Date().toISOString(),
+            total_cost: totalCost,
+            results: responseHistory
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `playground_results_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        showToast('Results exported', 'success');
+    }
+    
+    function showStats() {
+        const modal = new bootstrap.Modal(document.getElementById('statsModal'));
+        modal.show();
+        
+        // Generate stats
+        const modelStats = {};
+        responseHistory.forEach(result => {
+            if (!modelStats[result.model]) {
+                modelStats[result.model] = { count: 0, totalCost: 0 };
+            }
+            modelStats[result.model].count++;
+            modelStats[result.model].totalCost += 0.001; // Rough estimate
+        });
+        
+        let html = `
+            <div class="row mb-3">
+                <div class="col-md-4 text-center">
+                    <h4>${responseHistory.length}</h4>
+                    <small class="text-muted">Total Requests</small>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h4>$${totalCost.toFixed(4)}</h4>
+                    <small class="text-muted">Total Cost</small>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h4>${Object.keys(modelStats).length}</h4>
+                    <small class="text-muted">Models Used</small>
+                </div>
+            </div>
+            
+            <h6>Model Usage:</h6>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Requests</th>
+                            <th>Est. Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        Object.entries(modelStats).forEach(([model, stats]) => {
+            html += `
+                <tr>
+                    <td>${model}</td>
+                    <td>${stats.count}</td>
+                    <td>$${stats.totalCost.toFixed(4)}</td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table></div>';
+        
+        document.getElementById('statsContent').innerHTML = html;
+    }
+</script>
+{% endblock %}
