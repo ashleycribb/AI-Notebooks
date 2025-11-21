@@ -11,10 +11,12 @@ import asyncio
 from typing import Optional, Dict, Any, List
 from IPython.core.magic import Magics, magics_class, line_magic, cell_magic
 from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
-from IPython.display import display, HTML, Markdown
+from IPython.display import display, HTML, Markdown, Javascript
+import pandas as pd
 import openai
 import anthropic
 import google.generativeai as genai
+from ai_assistant.insight_assistant import InsightAssistant
 
 
 @magics_class
@@ -142,7 +144,55 @@ Please provide clean, well-commented code with proper error handling where appro
     def ai_help(self, line):
         """Show help for AI assistant commands."""
         return self._show_help()
-    
+
+    @cell_magic
+    @magic_arguments()
+    @argument('--model', '-m', default='auto', help='AI model to use')
+    def ai_insight(self, line, cell):
+        """Generate insights and visualizations from a DataFrame."""
+        args = parse_argstring(self.ai_insight, line)
+
+        # Execute the cell to get the DataFrame
+        try:
+            df = self.shell.ex(cell)
+            if not isinstance(df, pd.DataFrame):
+                display(HTML('<div style="color: red;">Error: The output of the cell must be a pandas DataFrame.</div>'))
+                return
+        except Exception as e:
+            display(HTML(f'<div style="color: red;">Error executing cell: {e}</div>'))
+            return
+
+        # Create an InsightAssistant instance
+        assistant = InsightAssistant()
+        assistant.magics = self # Pass the initialized clients
+
+        # Get and display insights
+        with display(HTML("<div>Generating insights...</div>"), display_id=True) as handle:
+            insights = assistant.get_insights(df, args.model)
+
+            # Custom display logic with interactive buttons
+            summary = insights.get('summary', 'No summary provided.')
+            visualizations = insights.get('visualizations', [])
+
+            html_output = f"<blockquote>{summary}</blockquote>"
+            if visualizations:
+                html_output += "<h4>Suggested Visualizations:</h4>"
+                for i, code in enumerate(visualizations):
+                    unique_id = f"btn_{i}_{os.urandom(4).hex()}"
+                    html_output += f"""
+                    <button id="{unique_id}">Generate Plot {i+1}</button>
+                    <pre style="display: inline-block; margin-left: 10px;"><code>{code}</code></pre><br>
+                    <script>
+                        document.getElementById('{unique_id}').onclick = function() {{
+                            var code = `{code.replace('`', '\\`')}`;
+                            Jupyter.notebook.insert_cell_below('code').set_text(code);
+                            Jupyter.notebook.select_next();
+                            Jupyter.notebook.execute_cell();
+                        }};
+                    </script>
+                    """
+            handle.update(HTML(html_output))
+
     def _get_ai_response(self, prompt: str, model: str = 'auto', temperature: float = 0.7) -> str:
         """Get response from AI model."""
         if not self.clients:
@@ -214,6 +264,11 @@ Please provide clean, well-commented code with proper error handling where appro
         <ul>
             <li><code>%ai_generate [description]</code> - Generate code from description</li>
         </ul>
+
+        <h4>Data Analysis:</h4>
+        <ul>
+            <li><code>%%ai_insight</code> - Generate insights and visualizations from a DataFrame</li>
+        </ul>
         
         <h4>Options:</h4>
         <ul>
@@ -237,11 +292,8 @@ def complex_function(data):
 
 def load_ipython_extension(ipython):
     """Load the AI assistant extension in IPython/Jupyter."""
-    ipython.register_magic_function(AIAssistantMagics(ipython).ai_chat, 'line', 'ai_chat')
-    ipython.register_magic_function(AIAssistantMagics(ipython).ai_code, 'cell', 'ai_code')
-    ipython.register_magic_function(AIAssistantMagics(ipython).ai_generate, 'line', 'ai_generate')
-    ipython.register_magic_function(AIAssistantMagics(ipython).ai_models, 'line', 'ai_models')
-    ipython.register_magic_function(AIAssistantMagics(ipython).ai_help, 'line', 'ai_help')
+    magics = AIAssistantMagics(ipython)
+    ipython.register_magics(magics)
     
     print("🤖 AI Assistant loaded! Use %ai_help to get started.")
 
