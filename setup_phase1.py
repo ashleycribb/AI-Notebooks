@@ -45,15 +45,6 @@ def install_dependencies():
     if not run_command("pip install -r requirements.txt", "Installing main dependencies"):
         return False
     
-    # Install additional dependencies for development
-    dev_deps = [
-        "jupyter-contrib-nbextensions",
-        "jupyter-nbextensions-configurator",
-        "jupyterlab-git"
-    ]
-    
-    for dep in dev_deps:
-        run_command(f"pip install {dep}", f"Installing {dep}")
     
     return True
 
@@ -97,48 +88,6 @@ PORT=5000
     return True
 
 
-def setup_jupyter_extensions():
-    """Set up Jupyter extensions and magic commands."""
-    print("\n🔧 Setting up Jupyter Extensions")
-    print("=" * 50)
-    
-    # Enable nbextensions
-    run_command("jupyter contrib nbextension install --user", "Installing notebook extensions")
-    run_command("jupyter nbextensions_configurator enable --user", "Enabling extension configurator")
-    
-    # Create IPython startup script
-    startup_dir = Path.home() / '.ipython' / 'profile_default' / 'startup'
-    startup_dir.mkdir(parents=True, exist_ok=True)
-    
-    startup_script = startup_dir / '00-ai-assistant.py'
-    with open(startup_script, 'w') as f:
-        f.write("""
-# AI Assistant Auto-loader for AI-Notebooks
-import sys
-from pathlib import Path
-
-# Add AI-Notebooks to path if we're in a notebook directory
-cwd = Path.cwd()
-if 'notebooks' in str(cwd) or 'AI-Notebooks' in str(cwd):
-    # Find the project root
-    project_root = cwd
-    while project_root.parent != project_root:
-        if (project_root / 'ai_assistant').exists():
-            break
-        project_root = project_root.parent
-    
-    if str(project_root) not in sys.path:
-        sys.path.insert(0, str(project_root))
-
-try:
-    from ai_assistant.utils import setup_assistant
-    print("🤖 AI Assistant available! Use setup_assistant() to activate.")
-except ImportError:
-    pass  # AI Assistant not available in this environment
-""")
-    
-    print("✅ Created Jupyter startup script")
-    return True
 
 
 def create_demo_files():
@@ -247,10 +196,6 @@ def main():
         print("❌ Failed to setup environment")
         sys.exit(1)
     
-    # Setup Jupyter extensions
-    if not setup_jupyter_extensions():
-        print("❌ Failed to setup Jupyter extensions")
-        sys.exit(1)
     
     # Create demo files
     if not create_demo_files():
