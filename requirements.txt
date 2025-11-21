@@ -40,7 +40,7 @@ sdv>=1.0.0
 lyzr>=0.1.0
 
 # Utility Libraries
-fpdf2>=3.0.0
+fpdf2==2.8.5
 youtube-transcript-api>=0.6.0
 duckduckgo-search>=5.0.0
 nest-asyncio>=1.5.0
